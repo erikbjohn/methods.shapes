@@ -1,0 +1,20 @@
+Package: methods.shapes.R
+Type: Package
+Title: Shapefile operations for the denver dataset
+Version: 0.1.0
+Author: Erik Johnson
+Maintainer: Erik Johnson <erikbjohn@gmail.com>
+Description: Functions for consistent shapefile tranformations.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: rgdal,
+    sp,
+    rgeos,
+    dplyr,
+    stats,
+    raster,
+    data.table,
+    methods,
+    geosphere
+RoxygenNote: 6.0.1.9000
