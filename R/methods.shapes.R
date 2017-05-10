@@ -22,7 +22,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @import rgdal
 #'      sp
 clean.shape <- function(x){
-    pc <- spTransform(x, CRS(shapes.proj.env))
+    proj.env <- shapes.proj.env
+    pc <- spTransform(x, CRS(proj.env))
     #pc <- clgeo_Clean(pc) # Useful for holes
     #pc <- gBuffer(pc, byid=TRUE, width=0)
     # For raster union
@@ -81,6 +82,7 @@ export.ogr <- function(shp, shp.name){
 #' @importFrom data.table as.data.table
 #'     data.table rbindlist
 line.orthogonal <- function(midpoint, shp.line){
+    proj.env <- shapes.proj.env
     midpoint.wgs <- spTransform(midpoint, CRS("+proj=longlat +datum=WGS84"))
     line.wgs <- spTransform(shp.line,  CRS("+proj=longlat +datum=WGS84"))
     line.ends <- slot(line.wgs@lines[[1]]@Lines[[1]], 'coords')
@@ -96,7 +98,7 @@ line.orthogonal <- function(midpoint, shp.line){
     #line.wgs@data$ID <- row.names(line.wgs@data)
     #row.names(line.wgs) <- line.wgs@data$ID
     l <- list()
-    l$line <- spTransform(sp.line.ray, CRS(shapes.proj.env))
+    l$line <- spTransform(sp.line.ray, CRS(proj.env))
     return(l$line)
 }
 #' @title shp.2.lines
@@ -108,6 +110,7 @@ line.orthogonal <- function(midpoint, shp.line){
 #' @import rgdal
 #'     sp
 shp.2.lines <- function(shp){
+    proj.env <- shapes.proj.env
     sl <- as(shp, 'SpatialLines')
     coord.1 <- slot(sl@lines[[1]]@Lines[[1]], 'coords')
     coord.1.length <- dim(coord.1)[1]
@@ -118,8 +121,8 @@ shp.2.lines <- function(shp){
         Ls[[i]] <- Lines(list(L1), ID = as.character(i))
     }
     SL1 = SpatialLines(Ls)
-    proj4string(SL1) <- shapes.proj.env
-    SL1 <- spTransform(SL1, CRS(shapes.proj.env))
+    proj4string(SL1) <- proj.env
+    SL1 <- spTransform(SL1, CRS(proj.env))
     df <- data.frame(ID = row.names(SL1))
     SL1 <- SpatialLinesDataFrame(SL1, df)
     return(SL1)
@@ -170,13 +173,14 @@ shapes.coords2points <- function(DT){
     ## DT: data.table with lat, long
     # Output file:
     ## spatialPointsDataFrame
+    proj.env <- shapes.proj.env
     lat <- NULL; long <- NULL
     coords <- cbind(Longitude = as.numeric(as.character(DT$long)),
                     Latitude = as.numeric(as.character(DT$lat)))
 
     Location.pts <- SpatialPointsDataFrame(coords, dplyr::select(DT, -lat, -long),
                                            proj4string = CRS("+init=epsg:4326"))
-    return(spTransform(Location.pts, CRS(shapes.proj.env)))
+    return(spTransform(Location.pts, CRS(proj.env)))
 }
 #' @title shapes.extent
 #'
