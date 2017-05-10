@@ -1,4 +1,4 @@
-Package: methods.shapes.R
+Package: methods.shapes
 Type: Package
 Title: Shapefile operations for the denver dataset
 Version: 0.1.0
