@@ -5,7 +5,7 @@
 #' See the README on
 #'
 #' @docType package
-#' @name methods.string
+#' @name methods.shapes
 #' @importFrom dplyr %>%
 #' @importFrom data.table :=
 NULL
