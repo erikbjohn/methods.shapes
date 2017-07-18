@@ -22,7 +22,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @import rgdal
 #'      sp
 clean.shape <- function(x){
-    proj.env <- shapes.proj.env
+    proj.env <- methods.shapes::shapes.proj.env
     pc <- spTransform(x, CRS(proj.env))
     #pc <- clgeo_Clean(pc) # Useful for holes
     #pc <- gBuffer(pc, byid=TRUE, width=0)
@@ -82,7 +82,7 @@ export.ogr <- function(shp, shp.name){
 #' @importFrom data.table as.data.table
 #'     data.table rbindlist
 line.orthogonal <- function(midpoint, shp.line){
-    proj.env <- shapes.proj.env
+    proj.env <- methods.shapes::shapes.proj.env
     midpoint.wgs <- spTransform(midpoint, CRS("+proj=longlat +datum=WGS84"))
     line.wgs <- spTransform(shp.line,  CRS("+proj=longlat +datum=WGS84"))
     line.ends <- slot(line.wgs@lines[[1]]@Lines[[1]], 'coords')
@@ -110,7 +110,7 @@ line.orthogonal <- function(midpoint, shp.line){
 #' @import rgdal
 #'     sp
 shp.2.lines <- function(shp){
-    proj.env <- shapes.proj.env
+    proj.env <- methods.shapes::shapes.proj.env
     sl <- as(shp, 'SpatialLines')
     coord.1 <- slot(sl@lines[[1]]@Lines[[1]], 'coords')
     coord.1.length <- dim(coord.1)[1]
@@ -173,7 +173,7 @@ shapes.coords2points <- function(DT){
     ## DT: data.table with lat, long
     # Output file:
     ## spatialPointsDataFrame
-    proj.env <- shapes.proj.env
+    proj.env <- methods.shapes::shapes.proj.env
     lat <- NULL; long <- NULL
     coords <- cbind(Longitude = as.numeric(as.character(DT$long)),
                     Latitude = as.numeric(as.character(DT$lat)))
