@@ -4,10 +4,12 @@
 \alias{shp.2.lines}
 \title{shp.2.lines}
 \usage{
-shp.2.lines(shp)
+shp.2.lines(shp, proj.env.name = NULL)
 }
 \arguments{
 \item{shp}{spatialPolygonsDataFrame}
+
+\item{proj.env.name}{Projection envrionment name Example: denver}
 }
 \description{
 Used by streetview to break apart a shapefile to its component outline.

@@ -4,10 +4,12 @@
 \alias{shapes.coords2points}
 \title{shapes.coords2points}
 \usage{
-shapes.coords2points(DT)
+shapes.coords2points(DT, proj.env.name = NULL)
 }
 \arguments{
 \item{DT}{data.table$long, data.table$lat}
+
+\item{proj.env.name}{Projection envrionment name (Example: denver)}
 }
 \description{
 Convert data table with lats and longs to spatial points.

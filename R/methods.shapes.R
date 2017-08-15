@@ -17,12 +17,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #'
 #' @description Reprojects shape file to proj.env and turns factor data columns to strings.
 #' @param x spatialPolygonsDataFrame
+#' @param proj.env.name projection environment Example: denver
 #' @keywords transform, project, spatialPolygonsDataFrame
 #' @export
 #' @import rgdal
 #'      sp
-clean.shape <- function(x){
-    proj.env <- methods.shapes::shapes.proj.env
+clean.shape <- function(x, proj.env.name=NULL){
+    proj.env <- projection.value(proj.name = proj.env.name)
     pc <- spTransform(x, CRS(proj.env))
     #pc <- clgeo_Clean(pc) # Useful for holes
     #pc <- gBuffer(pc, byid=TRUE, width=0)
@@ -74,6 +75,7 @@ export.ogr <- function(shp, shp.name){
 #' @description Finds orthogonal line for the streetview direction aiming.
 #' @param midpoint spatialPointsDataframe
 #' @param shp.line spatialLinesDataframe
+#' @param proj.env.name Projection envrionment name Example: denver
 #' @keywords streetview, orthogonal line
 #' @export
 #' @import rgdal
@@ -81,16 +83,17 @@ export.ogr <- function(shp, shp.name){
 #'     geosphere
 #' @importFrom data.table as.data.table
 #'     data.table rbindlist
-line.orthogonal <- function(midpoint, shp.line){
-    proj.env <- methods.shapes::shapes.proj.env
-    midpoint.wgs <- spTransform(midpoint, CRS("+proj=longlat +datum=WGS84"))
-    line.wgs <- spTransform(shp.line,  CRS("+proj=longlat +datum=WGS84"))
+line.orthogonal <- function(midpoint, shp.line, proj.env.name=NULL){
+    proj.env <- projection.value(proj.name = proj.env.name)
+    proj.wgs84 <- projection.value(proj.name = 'wgs84')
+    midpoint.wgs <- spTransform(midpoint, CRS(proj.wgs84))
+    line.wgs <- spTransform(shp.line,  CRS(proj.wgs84))
     line.ends <- slot(line.wgs@lines[[1]]@Lines[[1]], 'coords')
     line.bearing <- bearing(line.ends[1,], line.ends[2,])
     m.ray <- round(as.matrix(rbindlist(lapply(c(line.bearing-90, line.bearing+90),
                                               function(x) as.data.table(destPoint(midpoint.wgs, x, d=140))))),8)
     line.ray <- Lines(list(Line(cbind(m.ray[,1], m.ray[,2]))), ID='a')
-    sp.line.ray <- SpatialLines(list(line.ray), proj4string = CRS("+proj=longlat +datum=WGS84"))
+    sp.line.ray <- SpatialLines(list(line.ray), proj4string = CRS(proj.wgs84))
     df.line.ray <- data.frame(ID=row.names(sp.line.ray))
     row.names(df.line.ray) <- row.names(sp.line.ray)
     sp.line.ray <- SpatialLinesDataFrame(sp.line.ray, data=df.line.ray)
@@ -105,12 +108,13 @@ line.orthogonal <- function(midpoint, shp.line){
 #'
 #' @description Used by streetview to break apart a shapefile to its component outline.
 #' @param shp spatialPolygonsDataFrame
+#' @param proj.env.name Projection envrionment name Example: denver
 #' @keywords streetview, shape.2.lines, shape to line
 #' @export
 #' @import rgdal
 #'     sp
-shp.2.lines <- function(shp){
-    proj.env <- methods.shapes::shapes.proj.env
+shp.2.lines <- function(shp, proj.env.name=NULL){
+    proj.env <- projection.value(proj.name = proj.env.name)
     sl <- as(shp, 'SpatialLines')
     coord.1 <- slot(sl@lines[[1]]@Lines[[1]], 'coords')
     coord.1.length <- dim(coord.1)[1]
@@ -121,7 +125,7 @@ shp.2.lines <- function(shp){
         Ls[[i]] <- Lines(list(L1), ID = as.character(i))
     }
     SL1 = SpatialLines(Ls)
-    proj4string(SL1) <- proj.env
+    sp::proj4string(SL1) <- proj.env
     SL1 <- spTransform(SL1, CRS(proj.env))
     df <- data.frame(ID = row.names(SL1))
     SL1 <- SpatialLinesDataFrame(SL1, df)
@@ -163,23 +167,25 @@ shapes.check.identical <- function(DT){
 #'
 #' @description Convert data table with lats and longs to spatial points.
 #' @param DT data.table$long, data.table$lat
+#' @param proj.env.name Projection envrionment name (Example: denver)
 #' @keywords consolidate shapes
 #' @export
 #' @import rgdal
 #'     sp
+#'     pkg.data.paths
 #' @importFrom dplyr select
-shapes.coords2points <- function(DT){
+shapes.coords2points <- function(DT, proj.env.name = NULL){
     # Input file:
     ## DT: data.table with lat, long
     # Output file:
     ## spatialPointsDataFrame
-    proj.env <- methods.shapes::shapes.proj.env
+    proj.env <- projection.value(proj.name = proj.env.name)
+    proj.wgs84 <- projection.value(proj.name = 'wgs84')
     lat <- NULL; long <- NULL
     coords <- cbind(Longitude = as.numeric(as.character(DT$long)),
                     Latitude = as.numeric(as.character(DT$lat)))
-
     Location.pts <- SpatialPointsDataFrame(coords, dplyr::select(DT, -lat, -long),
-                                           proj4string = CRS("+init=epsg:4326"))
+                                           proj4string = CRS(proj.wgs84))
     return(spTransform(Location.pts, CRS(proj.env)))
 }
 #' @title shapes.extent
@@ -192,8 +198,8 @@ shapes.coords2points <- function(DT){
 #'     sp
 #' @importFrom raster extent
 shapes.extent <- function(shp){
-    proj.wgs <- shapes.proj.wgs()
-    shp <- spTransform(shp, CRS(proj.wgs))
+    proj.wgs84 <- projection.value(proj.name='wgs84')
+    shp <- spTransform(shp, CRS(proj.wgs84))
     shapes.extent <- extent(shp)
     return(shapes.extent)
 }
@@ -224,14 +230,61 @@ shapes.points.2.Buffer <- function(sp, shp){
     # Store map
     return(BufferFinal)
 }
-#' @title shapes.proj.wgs
-#' @description Returns the wgs84 projection.
-#' @keywords wgs84 projection
+#' @title projection.value
+#'
+#' @description Returns projection details from l.pkg
+#' @param path.root root path Default: ~/Dropbox/pkg.data
+#' @param proj.name projection name Example: 'wgs84'
+#' @param list.only echos list of all possible projections
+#' @keywords projection name
 #' @export
-#' @import rgdal
-#'     sp
-shapes.proj.wgs <- function(){
-    return('+proj=longlat +datum=WGS84')
+#' @import pkg.data.paths
+#'     knitr
+#' @importFrom data.table as.data.table
+#'     data.table rbindlist
+#'
+#' @importFrom utils str
+projection.value <- function(path.root = NULL, proj.name = NULL, list.only= FALSE){
+    file.name <- NULL; sys.path <- NULL
+    pkg.paths <- pkg.data.paths::paths(path.root, str.pkg.name = 'methods.shapes')
+    l.pkg.path <- pkg.paths[file.name=='l.pkg.rdata', sys.path]
+    load(l.pkg.path)
+    # Check if wgs84 already exists
+    check.wgs84 <- length(l.pkg[names(l.pkg)=='wgs84']) > 0
+    if (check.wgs84 == 0){
+        l.proj <- '+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0'
+        names(l.proj) <- 'wgs84'
+        l.pkg <- c(l.pkg, l.proj)
+        save(l.pkg, file=l.pkg.path)
+    }
+    if (list.only == TRUE){ # Just return list of possible projections
+        dt.pkg <- rbindlist(mapply(function(x, y) data.table(proj.name = x, projection.value = y), names(l.pkg), l.pkg, SIMPLIFY = FALSE))
+        knitr::kable(dt.pkg)
+    } else {
+        if (is.null(proj.name)){
+            proj.name <- 'denver'
+            cat('No projection name set. Using', proj.name)
+        }
+        l.proj <- l.pkg[names(l.pkg)==proj.name]
+        while (length(l.proj)==0){
+            cat(paste0('Projection ', proj.name, ' not found. Available projections are: \n'))
+            cat(paste0(str(l.pkg)))
+            proj.continue <- readline(prompt = cat(paste0('Assign name ',  proj.name, ' to a projection from the list (Example: wgs84) or type "1" for new projection')))
+            if (proj.continue != 1){ # Assign additional name to existing projection
+                l.proj <- l.pkg[names(l.pkg)==proj.continue]
+                if (length(l.proj)>0){
+                    names(l.proj) <- proj.name
+                    l.pkg <- c(l.pkg, l.proj)
+                }
+            } else { # New projection
+                l.proj <- readline(prompt = cat('Enter projection value. (Example: +init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0)'))
+                names(l.proj) <- proj.name
+                l.pkg <- c(l.pkg, l.proj)
+            }
+            save(l.pkg, file=l.pkg.path)
+        }
+        return(l.proj[[1]])
+    }
 }
 
 # shapes.points.2.shape <- function(shapes.points){

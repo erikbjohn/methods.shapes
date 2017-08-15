@@ -4,10 +4,12 @@
 \alias{clean.shape}
 \title{clean.shape}
 \usage{
-clean.shape(x)
+clean.shape(x, proj.env.name = NULL)
 }
 \arguments{
 \item{x}{spatialPolygonsDataFrame}
+
+\item{proj.env.name}{projection environment Example: denver}
 }
 \description{
 Reprojects shape file to proj.env and turns factor data columns to strings.

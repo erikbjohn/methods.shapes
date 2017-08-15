@@ -8,7 +8,8 @@ Description: Functions for consistent shapefile tranformations.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports: rgdal,
+Imports: pkg.data.paths, 
+    rgdal,
     sp,
     rgeos,
     dplyr,
@@ -16,5 +17,7 @@ Imports: rgdal,
     raster,
     data.table,
     methods,
-    geosphere
+    geosphere,
+    knitr,
+    utils
 RoxygenNote: 6.0.1.9000

@@ -4,12 +4,14 @@
 \alias{line.orthogonal}
 \title{line.orthogonal}
 \usage{
-line.orthogonal(midpoint, shp.line)
+line.orthogonal(midpoint, shp.line, proj.env.name = NULL)
 }
 \arguments{
 \item{midpoint}{spatialPointsDataframe}
 
 \item{shp.line}{spatialLinesDataframe}
+
+\item{proj.env.name}{Projection envrionment name Example: denver}
 }
 \description{
 Finds orthogonal line for the streetview direction aiming.
