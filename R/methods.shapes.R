@@ -129,6 +129,7 @@ shp.2.lines <- function(shp, proj.env.name=NULL){
     SL1 <- spTransform(SL1, CRS(proj.env))
     df <- data.frame(ID = row.names(SL1))
     SL1 <- SpatialLinesDataFrame(SL1, df)
+    SL1@data$LineLength <- sapply(SL1@lines, function(x) LineLength(Line(slot(slot(x, 'Lines')[[1]], 'coords'))))
     return(SL1)
 }
 #' @title shapes.check.identical
