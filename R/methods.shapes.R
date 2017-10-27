@@ -247,7 +247,7 @@ shapes.points.2.Buffer <- function(sp, shp){
 #'
 #' @importFrom utils str
 projection.value <- function(path.root = NULL, proj.name = NULL, list.only= FALSE){
-    file.name <- NULL; sys.path <- NULL
+    file.name <- NULL;
     pkg.paths <- pkg.data.paths::paths(path.root, str.pkg.name = 'methods.shapes')
     l.pkg.path <- pkg.paths[file.name=='l.pkg.rdata', sys.path]
     load(l.pkg.path)
@@ -272,8 +272,8 @@ projection.value <- function(path.root = NULL, proj.name = NULL, list.only= FALS
         l.pkg <- c(l.pkg, l.proj)
     }
     if (is.null(proj.name)){
-        cat('No projection name set. Using', proj.name)
         proj.name <- 'denver'
+        cat('No projection name set. Using', proj.name)
     }
     proj.ind <- which(names(l.pkg)==proj.name)
     return(l.pkg[[proj.ind]])
