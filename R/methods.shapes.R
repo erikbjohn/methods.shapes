@@ -259,34 +259,52 @@ projection.value <- function(path.root = NULL, proj.name = NULL, list.only= FALS
         l.pkg <- c(l.pkg, l.proj)
         save(l.pkg, file=l.pkg.path)
     }
-    if (list.only == TRUE){ # Just return list of possible projections
-        dt.pkg <- rbindlist(mapply(function(x, y) data.table(proj.name = x, projection.value = y), names(l.pkg), l.pkg, SIMPLIFY = FALSE))
-        knitr::kable(dt.pkg)
-    } else {
-        if (is.null(proj.name)){
-            proj.name <- 'denver'
-            cat('No projection name set. Using', proj.name)
-        }
-        l.proj <- l.pkg[names(l.pkg)==proj.name]
-        while (length(l.proj)==0){
-            cat(paste0('Projection ', proj.name, ' not found. Available projections are: \n'))
-            cat(paste0(str(l.pkg)))
-            proj.continue <- readline(prompt = cat(paste0('Assign name ',  proj.name, ' to a projection from the list (Example: wgs84) or type "1" for new projection')))
-            if (proj.continue != 1){ # Assign additional name to existing projection
-                l.proj <- l.pkg[names(l.pkg)==proj.continue]
-                if (length(l.proj)>0){
-                    names(l.proj) <- proj.name
-                    l.pkg <- c(l.pkg, l.proj)
-                }
-            } else { # New projection
-                l.proj <- readline(prompt = cat('Enter projection value. (Example: +init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0)'))
-                names(l.proj) <- proj.name
-                l.pkg <- c(l.pkg, l.proj)
-            }
-            save(l.pkg, file=l.pkg.path)
-        }
-        return(l.proj[[1]])
+    check.wgs <- length(l.pkg[names(l.pkg)=='wgs']) > 0
+    if (check.wgs == 0){
+        l.proj <- '+init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0'
+        names(l.proj) <- 'wgs'
+        l.pkg <- c(l.pkg, l.proj)
     }
+    check.denver <- length(l.pkg[names(l.pkg)=='denver']) > 0
+    if (check.denver == 0){
+        l.proj <- '+proj=lcc +lat_1=39.75 +lat_2=38.45 +lat_0=37.83333333333334 +lon_0=-105.5 +x_0=914401.8288036576 +y_0=304800.6096012192 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs +towgs84=0,0,0'
+        names(l.proj) <- 'denver'
+        l.pkg <- c(l.pkg, l.proj)
+    }
+    if (is.null(proj.name)){
+        cat('No projection name set. Using', proj.name)
+        proj.name <- 'denver'
+    }
+    proj.ind <- which(names(l.pkg)==proj.name)
+    return(l.pkg[[proj.ind]])
+    # if (list.only == TRUE){ # Just return list of possible projections
+    #     dt.pkg <- rbindlist(mapply(function(x, y) data.table(proj.name = x, projection.value = y), names(l.pkg), l.pkg, SIMPLIFY = FALSE))
+    #     knitr::kable(dt.pkg)
+    # } else {
+    #     if (is.null(proj.name)){
+    #         proj.name <- 'denver'
+    #         cat('No projection name set. Using', proj.name)
+    #
+    #     }
+    #     l.proj <- l.pkg[names(l.pkg)==proj.name]
+    #     # while (length(l.proj)==0){
+        #     cat(paste0('Projection ', proj.name, ' not found. Available projections are: \n'))
+        #     cat(paste0(str(l.pkg)))
+        #     proj.continue <- readline(prompt = cat(paste0('Assign name ',  proj.name, ' to a projection from the list (Example: wgs84) or type "1" for new projection')))
+        #     if (proj.continue != 1){ # Assign additional name to existing projection
+        #         l.proj <- l.pkg[names(l.pkg)==proj.continue]
+        #         if (length(l.proj)>0){
+        #             names(l.proj) <- proj.name
+        #             l.pkg <- c(l.pkg, l.proj)
+        #         }
+        #     } else { # New projection
+        #         l.proj <- readline(prompt = cat('Enter projection value. (Example: +init=epsg:4326 +proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0)'))
+        #         names(l.proj) <- proj.name
+        #         l.pkg <- c(l.pkg, l.proj)
+        #     }
+        #     save(l.pkg, file=l.pkg.path)
+        # }
+        # return(l.proj[[1]])
 }
 
 # shapes.points.2.shape <- function(shapes.points){
